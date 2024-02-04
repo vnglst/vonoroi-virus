@@ -77,7 +77,7 @@
     };
 
     let movingPoint = { x: 300, y: 200, color: "#E4CB6B" }; // Initial position of the moving point
-    let speed = 2; // Speed of the moving point
+    let speed = 8; // Speed of the moving point
     let angle = Math.random() * Math.PI * 2;
 
     function updateMovingPoint() {
@@ -87,11 +87,17 @@
       movingPoint.x += Math.cos(angle) * speed;
       movingPoint.y += Math.sin(angle) * speed;
 
+      // min speed of 2 and max speed of 20
+      speed = Math.min(Math.max(speed, 2), 20);
+
       // Keep the moving point within canvas bounds of 600 x 600 by reversing angle
-      if (movingPoint.x < 0 || movingPoint.x > 600) {
+      if (movingPoint.x <= 0 || movingPoint.x >= 600) {
+        movingPoint.x = Math.min(Math.max(movingPoint.x, 0), 600);
         angle = Math.PI - angle;
       }
-      if (movingPoint.y < 0 || movingPoint.y > 600) {
+
+      if (movingPoint.y <= 0 || movingPoint.y >= 600) {
+        movingPoint.y = Math.min(Math.max(movingPoint.y, 0), 600);
         angle = -angle;
       }
     }
