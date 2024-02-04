@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Voronoi Virus</title>
+
+    <meta
+      name="description"
+      content="A Voronoi diagram with a moving point, made with D3.js and canvas."
+    />
+    <link rel="canonical" href="https://voronoi-virus.koenvangilst.nl/" />
+    <link rel="author" href="https://koenvangilst.nl" />
+    <meta name="theme-color" content="#E4CB6B" />
+    <meta name="creator" content="Koen van Gilst" />
+  </head>
+  <style>
+    html {
+      height: 100%;
+    }
+
+    body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100%;
+      background: linear-gradient(to bottom, #1b322c 0%, #356454 100%);
+    }
+
+    canvas {
+      display: block;
+      border-radius: 4px;
+      overflow: hidden;
+      font-family: monospace;
+      margin-top: auto;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+      width: min(70vh, 80%);
+      max-width: 600px;
+    }
+
+    #made {
+      text-align: center;
+      line-height: 1.5;
+      font-family: monospace;
+      margin-top: auto;
+      margin-bottom: 20px;
+      font-size: 10px;
+      color: #eff1e4;
+    }
+
+    a {
+      color: #eff1e4;
+      text-decoration: none;
+      border-bottom: 1px solid #eff1e4;
+    }
+  </style>
+  <body>
+    <canvas id="voronoiCanvas" width="600" height="600"></canvas>
+    <p id="made">
+      made by <a href="https://koenvangilst.nl">Koen van Gilst</a> | source on
+      <a href="https://github.com/vnglst/voronoi-virus">github</a>
+    </p>
+  </body>
+  <script src="https://cdn.jsdelivr.net/npm/d3-delaunay@6.0.4/dist/d3-delaunay.min.js"></script>
+  <script>
+    let colorPalette = {
+      "Spring Cream": "#EFF1E4",
+      "Green Tea Pudding": "#C5E1A5",
+      // "Le Bon Dijon": "#E4CB6B",
+      "Fake Fern": "#529875",
+      "Shadow Pine": "#356454",
+      "Lacquer Green": "#1B322C",
+    };
+
+    let movingPoint = { x: 300, y: 200, color: "#E4CB6B" }; // Initial position of the moving point
+    let speed = 2; // Speed of the moving point
+    let angle = Math.random() * Math.PI * 2;
+
+    function updateMovingPoint() {
+      angle += (Math.random() - 0.5) * 0.25;
+      speed += (Math.random() - 0.5) * 0.25;
+
+      movingPoint.x += Math.cos(angle) * speed;
+      movingPoint.y += Math.sin(angle) * speed;
+
+      // Keep the moving point within canvas bounds of 600 x 600 by reversing angle
+      if (movingPoint.x < 0 || movingPoint.x > 600) {
+        angle = Math.PI - angle;
+      }
+      if (movingPoint.y < 0 || movingPoint.y > 600) {
+        angle = -angle;
+      }
+    }
+
+    const canvas = document.getElementById("voronoiCanvas");
+    const ctx = canvas.getContext("2d");
+    const width = canvas.width;
+    const height = canvas.height;
+    const numPoints = 50;
+    const points = [];
+
+    // Generate random seed points
+    for (let i = 0; i < numPoints; i++) {
+      points.push({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        // every color is a shade of the color palette, using the hex value and changing the alpha value
+        color:
+          Object.values(colorPalette)[
+            Math.floor(Math.random() * Object.values(colorPalette).length)
+          ] +
+          Math.floor(Math.random() * 9) +
+          "0",
+      });
+    }
+
+    function drawVoronoi() {
+      ctx.clearRect(0, 0, width, height); // Clear the canvas
+
+      // Include moving point in points array
+      points.push(movingPoint);
+
+      // Create a Delaunay triangulation from the points
+      const delaunay = d3.Delaunay.from(points.map((p) => [p.x, p.y]));
+
+      // Create a Voronoi diagram from the Delaunay triangulation
+      const voronoi = delaunay.voronoi([0, 0, width, height]);
+
+      // Draw each cell of the Voronoi diagram
+      for (let i = 0; i < points.length; i++) {
+        const cell = voronoi.cellPolygon(i);
+        if (cell) {
+          ctx.beginPath();
+          ctx.moveTo(cell[0][0], cell[0][1]);
+          for (let j = 1; j < cell.length; j++) {
+            ctx.lineTo(cell[j][0], cell[j][1]);
+          }
+          ctx.closePath();
+          ctx.fillStyle = points[i].color;
+          ctx.fill();
+        }
+      }
+
+      // Remove moving point after drawing
+      points.pop();
+    }
+
+    // Update and redraw loop
+    function animate() {
+      updateMovingPoint(); // Update the position of the moving point
+      drawVoronoi(); // Redraw the Voronoi diagram
+      requestAnimationFrame(animate); // Repeat
+    }
+
+    animate();
+  </script>
+</html>
