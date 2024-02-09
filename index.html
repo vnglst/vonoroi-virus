@@ -108,7 +108,7 @@
       y: 200,
       speed: 5,
       angle: Math.random() * Math.PI * 2,
-      color: "#E4CB6B",
+      color: colorPalette.LeBonDijon,
     });
 
     function updatePoints() {
@@ -132,15 +132,11 @@
     }
 
     function drawVoronoi() {
-      ctx.clearRect(0, 0, width, height); // Clear the canvas
+      ctx.clearRect(0, 0, width, height);
 
-      // Create a Delaunay triangulation from the points
       const delaunay = d3.Delaunay.from(points.map((p) => [p.x, p.y]));
-
-      // Create a Voronoi diagram from the Delaunay triangulation
       const voronoi = delaunay.voronoi([0, 0, width, height]);
 
-      // Draw each cell of the Voronoi diagram
       for (let i = 0; i < points.length; i++) {
         const cell = voronoi.cellPolygon(i);
         if (cell) {
@@ -156,7 +152,6 @@
       }
     }
 
-    // Update and redraw loop
     function animate() {
       updatePoints();
       drawVoronoi();
