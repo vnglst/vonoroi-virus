@@ -67,40 +67,19 @@
   </body>
   <script src="https://cdn.jsdelivr.net/npm/d3-delaunay@6.0.4/dist/d3-delaunay.min.js"></script>
   <script>
-    let colorPalette = {
-      "Spring Cream": "#EFF1E4",
-      "Green Tea Pudding": "#C5E1A5",
-      // "Le Bon Dijon": "#E4CB6B",
-      "Fake Fern": "#529875",
-      "Shadow Pine": "#356454",
-      "Lacquer Green": "#1B322C",
+    const colorPalette = {
+      SpringCream: "#EFF1E4",
+      GreenTeaPudding: "#C5E1A5",
+      LeBonDijon: "#E4CB6B",
+      FakeFern: "#529875",
+      ShadowPine: "#356454",
+      LacquerGreen: "#1B322C",
     };
 
-    let movingPoint = { x: 300, y: 200, color: "#E4CB6B" }; // Initial position of the moving point
-    let speed = 8; // Speed of the moving point
-    let angle = Math.random() * Math.PI * 2;
-
-    function updateMovingPoint() {
-      angle += (Math.random() - 0.5) * 0.25;
-      speed += (Math.random() - 0.5) * 0.25;
-
-      movingPoint.x += Math.cos(angle) * speed;
-      movingPoint.y += Math.sin(angle) * speed;
-
-      // min speed of 2 and max speed of 20
-      speed = Math.min(Math.max(speed, 2), 20);
-
-      // Keep the moving point within canvas bounds of 600 x 600 by reversing angle
-      if (movingPoint.x <= 0 || movingPoint.x >= 600) {
-        movingPoint.x = Math.min(Math.max(movingPoint.x, 0), 600);
-        angle = Math.PI - angle;
-      }
-
-      if (movingPoint.y <= 0 || movingPoint.y >= 600) {
-        movingPoint.y = Math.min(Math.max(movingPoint.y, 0), 600);
-        angle = -angle;
-      }
-    }
+    // Cell colors are all colors except Le Bon Dijon
+    cellColors = Object.values(colorPalette).filter(
+      (color) => color !== colorPalette.LeBonDijon
+    );
 
     const canvas = document.getElementById("voronoiCanvas");
     const ctx = canvas.getContext("2d");
@@ -114,21 +93,46 @@
       points.push({
         x: Math.random() * width,
         y: Math.random() * height,
-        // every color is a shade of the color palette, using the hex value and changing the alpha value
+        speed: Math.random() * 0.01,
+        angle: Math.random() * Math.PI * 2,
         color:
-          Object.values(colorPalette)[
-            Math.floor(Math.random() * Object.values(colorPalette).length)
-          ] +
-          Math.floor(Math.random() * 9) +
+          cellColors[Math.floor(Math.random() * cellColors.length)] +
+          Math.floor(Math.random() * 10) +
           "0",
       });
     }
 
+    // Add the moving point as the last point in the array
+    points.push({
+      x: 300,
+      y: 200,
+      speed: 5,
+      angle: Math.random() * Math.PI * 2,
+      color: "#E4CB6B",
+    });
+
+    function updatePoints() {
+      for (let point of points) {
+        point.angle += (Math.random() - 0.5) * 0.2;
+
+        point.x += Math.cos(point.angle) * point.speed;
+        point.y += Math.sin(point.angle) * point.speed;
+
+        // Keep the point within canvas bounds by reversing angle
+        if (point.x <= 0 || point.x >= width) {
+          point.x = Math.min(Math.max(point.x, 0), width);
+          point.angle = Math.PI - point.angle;
+        }
+
+        if (point.y <= 0 || point.y >= height) {
+          point.y = Math.min(Math.max(point.y, 0), height);
+          point.angle = -point.angle;
+        }
+      }
+    }
+
     function drawVoronoi() {
       ctx.clearRect(0, 0, width, height); // Clear the canvas
-
-      // Include moving point in points array
-      points.push(movingPoint);
 
       // Create a Delaunay triangulation from the points
       const delaunay = d3.Delaunay.from(points.map((p) => [p.x, p.y]));
@@ -150,16 +154,13 @@
           ctx.fill();
         }
       }
-
-      // Remove moving point after drawing
-      points.pop();
     }
 
     // Update and redraw loop
     function animate() {
-      updateMovingPoint(); // Update the position of the moving point
-      drawVoronoi(); // Redraw the Voronoi diagram
-      requestAnimationFrame(animate); // Repeat
+      updatePoints();
+      drawVoronoi();
+      requestAnimationFrame(animate);
     }
 
     animate();
